@@ -1,0 +1,197 @@
+name: ITrack CI/CD Pipeline
+
+on:
+  push:
+    branches: [feature/staging-v1, main, develop]
+  pull_request:
+    branches: [feature/staging-v1, main, develop]
+
+# Set environment variables
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION_STAGING }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID_STAGING }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY_STAGING }}
+  BACKEND_REPOSITORY: ${{ secrets.BACKEND_REPOSITORY_STAGING }}
+  FRONTEND_REPOSITORY: ${{ secrets.FRONTEND_REPOSITORY_STAGING }}
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_STAGING }}
+  ECS_BACKEND_SERVICE: ${{ secrets.ECS_BACKEND_SERVICE_STAGING }}
+  ECS_FRONTEND_SERVICE: ${{ secrets.ECS_FRONTEND_SERVICE_STAGING }}
+  BACKEND_TASK_DEFINITION: ${{ secrets.BACKEND_TASK_DEFINITION_STAGING }}
+  FRONTEND_TASK_DEFINITION: ${{ secrets.FRONTEND_TASK_DEFINITION_STAGING }}
+
+jobs:
+  # terraform-plan (for PRs) 4
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Format Check
+        run: |
+          cd terraform
+          terraform fmt -check -recursive
+
+      - name: Terraform Init (with S3 backend)
+        run: |
+          cd terraform
+          terraform init -backend-config="environments/staging.backend.conf"
+
+      - name: Terraform Validate
+        run: |
+          cd terraform
+          terraform validate
+
+      - name: Terraform Plan
+        run: |
+          cd terraform
+          terraform plan -var-file="environments/staging.tfvars" -out=staging.tfplan
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD_STAGING }}
+
+  # build and push - only on main branch
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/staging-v1'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Backend image
+        run: |
+          cd api
+          docker build -t $ECR_REGISTRY/$BACKEND_REPOSITORY:$GITHUB_SHA .
+          docker push $ECR_REGISTRY/$BACKEND_REPOSITORY:$GITHUB_SHA
+          docker tag $ECR_REGISTRY/$BACKEND_REPOSITORY:$GITHUB_SHA $ECR_REGISTRY/$BACKEND_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$BACKEND_REPOSITORY:latest
+
+      - name: Build and push Frontend image
+        run: |
+          cd ui
+          docker build -t $ECR_REGISTRY/$FRONTEND_REPOSITORY:$GITHUB_SHA .
+          docker push $ECR_REGISTRY/$FRONTEND_REPOSITORY:$GITHUB_SHA
+          docker tag $ECR_REGISTRY/$FRONTEND_REPOSITORY:$GITHUB_SHA $ECR_REGISTRY/$FRONTEND_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$FRONTEND_REPOSITORY:latest
+
+  # Note: We are skipping terraform-apply as we're managing task definitions directly
+  # This job would be needed for other infrastructure changes
+
+  deploy-production:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/staging-v1'
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_STAGING }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_STAGING }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download Task Definition
+        run: |
+          aws ecs describe-task-definition --task-definition $BACKEND_TASK_DEFINITION --query taskDefinition > backend-task-def.json
+          aws ecs describe-task-definition --task-definition $FRONTEND_TASK_DEFINITION --query taskDefinition > frontend-task-def.json
+
+      - name: Update Task Definition with new image
+        run: |
+          # Update backend task definition
+          jq --arg IMAGE "$ECR_REGISTRY/$BACKEND_REPOSITORY:$GITHUB_SHA" \
+            '.containerDefinitions[0].image = $IMAGE' backend-task-def.json > backend-task-def-updated.json
+          
+          # Update frontend task definition
+          jq --arg IMAGE "$ECR_REGISTRY/$FRONTEND_REPOSITORY:$GITHUB_SHA" \
+            '.containerDefinitions[0].image = $IMAGE' frontend-task-def.json > frontend-task-def-updated.json
+
+      - name: Register new Task Definitions
+        run: |
+          BACKEND_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://backend-task-def-updated.json \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+          
+          FRONTEND_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://frontend-task-def-updated.json \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+          
+          echo "Registered backend task definition: $BACKEND_TASK_DEF_ARN"
+          echo "Registered frontend task definition: $FRONTEND_TASK_DEF_ARN"
+          
+          echo "BACKEND_TASK_DEF_ARN=$BACKEND_TASK_DEF_ARN" >> $GITHUB_ENV
+          echo "FRONTEND_TASK_DEF_ARN=$FRONTEND_TASK_DEF_ARN" >> $GITHUB_ENV
+
+      - name: Update ECS Services
+        run: |
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_BACKEND_SERVICE --task-definition $BACKEND_TASK_DEF_ARN --force-new-deployment
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_FRONTEND_SERVICE --task-definition $FRONTEND_TASK_DEF_ARN --force-new-deployment
+
+      - name: Wait for Deployment to Complete
+        run: |
+          aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_BACKEND_SERVICE --max-attempts 30 --delay 30
+          aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_FRONTEND_SERVICE --max-attempts 30 --delay 30
+
+      - name: Health Check
+        run: |
+          ALB_DNS=$(aws elbv2 describe-load-balancers --names ${{ secrets.ALB_NAME_STAGING }} --query 'LoadBalancers[0].DNSName' --output text)
+          echo "Checking backend health at http://$ALB_DNS/api/health"
+          for i in {1..10}; do
+            if curl -f -s "http://$ALB_DNS/api/health" > /dev/null; then
+              echo "✅ Backend health check passed"
+              break
+            elif [ $i -eq 10 ]; then
+              echo "❌ Backend health check failed after 10 attempts"
+              exit 1
+            else
+              echo "⏳ Backend not ready, attempt $i/10..."
+              sleep 30
+            fi
+          done
+
+  notify:
+    name: Notify Teams
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    steps:
+      - name: Notify on Success
+        if: needs.deploy-production.result == 'success'
+        run: |
+          echo "🎉 Staging deployment successful!"
+          # Add Slack/Teams notification here
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Pipeline failed!"
+          # Add Slack/Teams notification here

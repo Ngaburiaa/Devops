@@ -1,0 +1,64 @@
+name: API Unit Tests CI
+
+on:
+  pull_request:
+    branches: [ develop ]
+    paths:
+      - 'api/**'
+
+jobs:
+  test:
+    runs-on: ${{ vars.DEPLOY_RUNNER }}
+    environment: test
+    defaults:
+      run:
+        working-directory: api
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      DEFAULT_USER_PASSWORD: ${{ secrets.DEFAULT_USER_PASSWORD }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version:  ${{ vars.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for Postgres
+        run: sleep 5
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Create .env.test file
+        run: |
+          cat > .env.test <<EOF
+          NODE_ENV=test
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+          DEFAULT_USER_PASSWORD=${{ secrets.DEFAULT_USER_PASSWORD }}
+          EOF
+      - name: Run Unit Tests
+        run: npm test 

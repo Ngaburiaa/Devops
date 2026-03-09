@@ -1,0 +1,85 @@
+name: Deploy API to Development Environment
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'api/**'
+
+  workflow_dispatch:
+
+jobs:
+  build-api:
+    runs-on: ${{ vars.DEPLOY_RUNNER }}
+    environment: ${{ vars.ENV_DEV }}
+     # From https://github.com/GRIFFINGlobalTech/rs-feb-25/settings/variables/actions as ENV_DEV = dev
+
+    defaults:
+      run:
+        working-directory: ./api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Render task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1 
+        with:
+          task-definition: ${{ vars.ECS_TASK_DEFINITION }}
+          container-name: ${{ vars.ECS_CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+          environment-variables: |
+            POSTGRES_HOST=${{ vars.POSTGRES_HOST }}
+            POSTGRES_DB=${{ vars.POSTGRES_DB }}
+            POSTGRES_USER=${{ vars.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            IS_DEV_ENV=${{ vars.IS_DEV_ENV }}
+            FRONTEND_URL=${{ vars.FRONTEND_URL }}
+            FRONTEND_URL_PROD=${{ vars.FRONTEND_URL_PROD }}
+            EMAIL_PASSWORD=${{secrets.EMAIL_PASSWORD}}
+            JWT_SECRET=${{secrets.JWT_SECRET}}
+            APP_PASSWORD=${{secrets.APP_PASSWORD}}
+            ADMIN_PASSWORD=${{secrets.ADMIN_PASSWORD}}
+            DEFAULT_USER_PASSWORD=${{secrets.DEFAULT_USER_PASSWORD}}
+            API_BASE_URL=${{vars.API_BASE_URL}}
+            API_BASE_URL_PROD=${{vars.API_BASE_URL_PROD}}
+            EMAIL=${{secrets.EMAIL}}
+            PROCUREMENT_EMAIL=${{secrets.PROCUREMENT_EMAIL}}
+            FINANCE_EMAIL=${{secrets.FINANCE_EMAIL}}
+            ADMIN_EMAIL=${{secrets.ADMIN_EMAIL}}
+            LAMBDA_EMAIL_SERVICE_FUNCTION_NAME=${{ vars.LAMBDA_EMAIL_SERVICE_FUNCTION_NAME }}
+            AWS_REGION=${{ vars.AWS_REGION }}
+
+      - name: Deploy ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ vars.ECS_SERVICE }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+          wait-for-service-stability: true
+          

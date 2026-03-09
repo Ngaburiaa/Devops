@@ -1,0 +1,27 @@
+# VPC Module Variables
+
+variable "vpc_name" {
+  description = "Name of the VPC"
+  type        = string
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  type        = string
+}
+
+variable "availability_zones" {
+  description = "List of availability zones"
+  type        = list(string)
+}
+
+variable "db_subnet_group_name" {
+  description = "Optional explicit name for DB subnet group"
+  type        = string
+  default     = ""
+}

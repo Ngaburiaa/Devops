@@ -1,0 +1,49 @@
+name: Deploy UI to Development Environment
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'ui/**'  
+    
+  workflow_dispatch:
+  # Note: Cypress tests are NOT triggered on the develop branch.
+  # Cypress tests run on the main branch only (on pull_request and push events targeting main).
+  # See .github/workflows/automation-scripts.yaml for Cypress workflow configuration.
+
+jobs:
+  build-and-deploy:
+    runs-on: ${{ vars.DEPLOY_RUNNER }}
+    environment: ${{ vars.ENV_DEV }}
+     # From https://github.com/GRIFFINGlobalTech/rs-feb-25/settings/variables/actions as ENV_DEV = dev
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ vars.NODE_VERSION }}
+
+    - name: Install dependencies
+      run: npm install
+      working-directory: ui
+
+    - name: Build UI
+      run: npm run build
+      working-directory: ui
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Sync to S3
+      run: aws s3 sync ui/dist s3://${{ vars.S3_BUCKET_NAME }} --delete --acl public-read
+
+    - name: Create CloudFront invalidation
+      run: aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} --paths '/*'

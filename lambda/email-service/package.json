@@ -1,0 +1,17 @@
+{
+    "name": "lambda-email-service",
+    "version": "1.0.0",
+    "description": "AWS Lambda function for sending emails via Microsoft Graph API",
+    "type": "module",
+    "main": "index.mjs",
+    "scripts": {
+        "test": "node test-local.mjs"
+    },
+    "keywords": [
+        "lambda",
+        "email",
+        "microsoft-graph"
+    ],
+    "author": "",
+    "license": "ISC"
+}

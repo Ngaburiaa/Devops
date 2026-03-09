@@ -1,0 +1,223 @@
+name: cypress-tests
+
+on:
+  pull_request:
+    branches: [main]   # Runs on PRs targeting main
+  push:
+    branches: [main]   # Runs after merge to main
+
+jobs:
+  cypress-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Install Allure CLI
+      - name: Install Allure CLI
+        run: npm install -g allure-commandline --unsafe-perm=true
+
+       # 5. Run Cypress tests with Allure enabled
+      - name: Run Cypress Tests
+        uses: cypress-io/github-action@v6
+        with:
+          browser: chrome
+          headed: false
+          config-file: cypress.config.ts
+          env: allure=true
+        env:
+          CYPRESS_CISO_EMAIL: ${{ secrets.CYPRESS_CISO_EMAIL }}
+          CYPRESS_CISO_PASSWORD: ${{ secrets.CYPRESS_CISO_PASSWORD }}
+          CYPRESS_IT_EMAIL: ${{ secrets.CYPRESS_IT_EMAIL }}
+          CYPRESS_IT_PASSWORD: ${{ secrets.CYPRESS_IT_PASSWORD }}
+          CYPRESS_PROC_EMAIL: ${{ secrets.CYPRESS_PROC_EMAIL }}
+          CYPRESS_PROC_PASSWORD: ${{ secrets.CYPRESS_PROC_PASSWORD }}
+          CYPRESS_FIN_EMAIL: ${{ secrets.CYPRESS_FIN_EMAIL }}
+          CYPRESS_FIN_PASSWORD: ${{ secrets.CYPRESS_FIN_PASSWORD }}
+
+      # 6. Extract Cypress Test Results (REAL COUNTS — FIXED FOR MOCHAWESOME)
+      - name: Extract Cypress Test Counts
+        id: test_counts
+        if: always()
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          const resultsDir = 'cypress/results';
+
+          if (!fs.existsSync(resultsDir)) {
+            console.log('No results directory found');
+            process.exit(0);
+          }
+
+          const files = fs.readdirSync(resultsDir).filter(f => f.endsWith('.json'));
+          if (!files.length) {
+            console.log('No mochawesome json files found');
+            process.exit(0);
+          }
+
+          let passed = 0, failed = 0, pending = 0, skipped = 0, durationMs = 0;
+
+          files.forEach(file => {
+            const data = JSON.parse(fs.readFileSync(path.join(resultsDir, file), 'utf8'));
+            durationMs += data.stats?.duration || 0;
+            passed += data.stats?.passes || 0;
+            failed += data.stats?.failures || 0;
+            pending += data.stats?.pending || 0;
+            skipped += data.stats?.skipped || 0;
+          });
+
+          const duration = new Date(durationMs).toISOString().substr(11, 8);
+
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `
+          passed=${passed}
+          failed=${failed}
+          pending=${pending}
+          skipped=${skipped}
+          duration=${duration}
+          `);
+          EOF
+
+      # 7. GitHub Job Summary (View Logs)
+      - name: Generate GitHub Job Summary
+        if: always()
+        run: |
+          RESULT="✅ Passed"
+          if [[ "${{ steps.test_counts.outputs.failed }}" -gt 0 ]]; then
+            RESULT="❌ Failed"
+          fi
+
+          echo "## Cypress Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Result | Passed | Failed | Pending | Skipped | Duration |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|--------|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| $RESULT | ${{ steps.test_counts.outputs.passed }} | ${{ steps.test_counts.outputs.failed }} | ${{ steps.test_counts.outputs.pending }} | ${{ steps.test_counts.outputs.skipped }} | ${{ steps.test_counts.outputs.duration }} |" >> $GITHUB_STEP_SUMMARY
+
+      # 8. Generate Allure report
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          mkdir -p allure-results
+          allure generate allure-results --clean -o allure-report || true
+
+      # 9. Upload Allure + Cypress artifacts
+      - name: Upload Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts
+          path: |
+            allure-report
+            allure-results
+            cypress/screenshots
+            cypress/videos
+            cypress/reports
+          retention-days: 7
+
+      # 10. Send Teams Summary (TABLE – FIXED)
+      - name: Send Teams Summary (Table)
+        if: always()
+        run: |
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            ENVIRONMENT="staging"
+          else
+            ENVIRONMENT="dev"
+          fi
+
+          PASSED="${{ steps.test_counts.outputs.passed }}"
+          FAILED="${{ steps.test_counts.outputs.failed }}"
+          PENDING="${{ steps.test_counts.outputs.pending }}"
+          SKIPPED="${{ steps.test_counts.outputs.skipped }}"
+          DURATION="${{ steps.test_counts.outputs.duration }}"
+
+          STATUS="Passed"
+          ICON="✅"
+          if [[ "$FAILED" -gt 0 ]]; then
+            STATUS="Failed"
+            ICON="❌"
+          fi
+
+          curl -H "Content-Type: application/json" -d "{
+            \"type\": \"message\",
+            \"attachments\": [{
+              \"contentType\": \"application/vnd.microsoft.card.adaptive\",
+              \"content\": {
+                \"\$schema\": \"http://adaptivecards.io/schemas/adaptive-card.json\",
+                \"type\": \"AdaptiveCard\",
+                \"version\": \"1.5\",
+                \"body\": [
+                  {\"type\": \"TextBlock\", \"text\": \"Cypress Results (${ENVIRONMENT})\", \"size\": \"Large\", \"weight\": \"Bolder\"},
+                  {
+                    \"type\": \"Table\",
+                    \"columns\": [
+                      {\"width\": 3},{\"width\": 3},{\"width\": 3},{\"width\": 2},{\"width\": 2},{\"width\": 3}
+                    ],
+                    \"rows\": [
+                      {
+                        \"type\": \"TableRow\",
+                        \"cells\": [
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"Result\", \"weight\": \"Bolder\"}]},
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"Passed\", \"weight\": \"Bolder\"}]},
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"Failed\", \"weight\": \"Bolder\"}]},
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"Pending\", \"weight\": \"Bolder\"}]},
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"Skipped\", \"weight\": \"Bolder\"}]},
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"Duration\", \"weight\": \"Bolder\"}]}
+                        ]
+                      },
+                      {
+                        \"type\": \"TableRow\",
+                        \"cells\": [
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"${ICON} ${STATUS}\"}]} ,
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"${PASSED}\"}]} ,
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"${FAILED}\"}]} ,
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"${PENDING}\"}]} ,
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"${SKIPPED}\"}]} ,
+                          {\"type\": \"TableCell\", \"items\": [{\"type\": \"TextBlock\", \"text\": \"${DURATION}\"}]} 
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    \"type\": \"ActionSet\",
+                    \"actions\": [{
+                      \"type\": \"Action.OpenUrl\",
+                      \"title\": \"View Full Logs\",
+                      \"url\": \"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
+                    }]
+                  }
+                ]
+              }
+            }]
+          }" ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+      # 11. Failure alert
+      - name: Send Teams FAILURE Alert
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d "{\"text\": \"❌ Cypress Tests Failed — https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+      # 12. Execute Post-Test Cleanup
+      - name: Execute Post-Test Cleanup
+        if: always()
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          API_USER: ${{ secrets.API_USER }}
+          API_PASSWORD: ${{ secrets.API_PASSWORD }}
+        run: |
+          echo "Running post-test cleanup..."
+          node cleanup/cleanup.js || echo "Cleanup failed but pipeline continues"

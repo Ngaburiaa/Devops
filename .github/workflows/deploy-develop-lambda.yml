@@ -1,0 +1,81 @@
+name: Deploy Lambda Email Service To Develop Environment
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'lambda/email-service/**'
+      - '.github/workflows/deploy-develop-lambda.yml'
+  workflow_dispatch:
+
+env:
+  LAMBDA_FUNCTION_NAME: ${{ vars.LAMBDA_EMAIL_SERVICE_FUNCTION_NAME }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+
+jobs:
+  deploy-lambda:
+    name: Deploy Lambda Function
+    runs-on: ubuntu-latest
+    environment: dev
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Build Lambda deployment package
+        run: |
+          cd lambda/email-service
+          mkdir -p dist
+          cd src
+          zip -r ../dist/deployment.zip index.mjs
+          cd ..
+          echo "Deployment package created"
+          ls -lh dist/deployment.zip
+      
+      - name: Update Lambda function code
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --zip-file fileb://lambda/email-service/dist/deployment.zip \
+            --region ${{ env.AWS_REGION }}
+      
+      - name: Update Lambda environment variables
+        run: |
+          aws lambda update-function-configuration \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --environment "Variables={
+              TENANT_ID=${{ vars.AZURE_TENANT_ID }},
+              CLIENT_ID=${{ vars.AZURE_CLIENT_ID }},
+              CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }},
+              SENDER_USER_ID=${{ vars.SENDER_EMAIL_DEV }}
+            }" \
+            --region ${{ env.AWS_REGION }}
+      
+      - name: Wait for Lambda update to complete
+        run: |
+          aws lambda wait function-updated \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --region ${{ env.AWS_REGION }}
+      
+      - name: Verify deployment
+        run: |
+          aws lambda get-function \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Configuration.[FunctionName,Runtime,LastModified,State]' \
+            --output table
+      
+      - name: Deployment summary
+        run: |
+          echo "Lambda function deployed successfully"
+          echo "Function: ${{ env.LAMBDA_FUNCTION_NAME }}"
+          echo "Region: ${{ env.AWS_REGION }}"
+          echo "Timestamp: $(date)"

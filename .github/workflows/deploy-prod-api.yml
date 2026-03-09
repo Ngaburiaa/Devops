@@ -1,0 +1,338 @@
+name: Deploy Backend API to Production
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - 'terraform/**'
+ 
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION_PRODUCTION }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID_PRODUCTION }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY_PRODUCTION }}
+  BACKEND_REPOSITORY: ${{ secrets.BACKEND_REPOSITORY_PRODUCTION }}
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_PRODUCTION }}
+  ECS_BACKEND_SERVICE: ${{ secrets.ECS_BACKEND_SERVICE_PRODUCTION }}
+  BACKEND_TASK_DEFINITION: ${{ secrets.BACKEND_TASK_DEFINITION_PRODUCTION }}
+
+jobs:
+ detect-api-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api_changed: ${{ steps.filter.outputs.api }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'api/**'
+
+ detect-terraform-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      terraform_changed: ${{ steps.filter.outputs.terraform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            terraform:
+              - 'terraform/**'
+
+ terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: detect-terraform-changes
+    if:  needs.detect-terraform-changes.outputs.terraform_changed == 'true'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('api/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PRODUCTION }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PRODUCTION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Build Lambda Deployment Package
+        run: |
+          cd lambda/email-service
+          mkdir -p dist
+          cd src
+          zip -r ../deployment.zip index.mjs
+          echo "Lambda deployment package created"
+          ls -lh ../deployment.zip
+
+      - name: Terraform Format Check
+        continue-on-error: true
+        run: |
+          cd terraform
+          terraform fmt -check -recursive
+
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init -backend-config="environments/prod.backend.conf"
+
+      - name: Terraform Validate
+        run: |
+          cd terraform
+          terraform validate
+
+      - name: Terraform Plan
+        run: |
+          cd terraform
+          terraform plan -var-file="environments/prod.tfvars" -out=prod.tfplan
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD_PRODUCTION }}
+          TF_VAR_azure_tenant_id: ${{ secrets.AZURE_TENANT_ID_PRODUCTION }}
+          TF_VAR_azure_client_id: ${{ secrets.AZURE_CLIENT_ID_PRODUCTION }}
+          TF_VAR_azure_client_secret: ${{ secrets.AZURE_CLIENT_SECRET_PRODUCTION }}
+          TF_VAR_sender_email: ${{ secrets.SENDER_EMAIL_PRODUCTION }}
+          TF_VAR_db_name: ${{ secrets.DB_NAME }}
+          TF_VAR_db_username: ${{ secrets.DB_USERNAME}}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_admin_email: ${{ secrets.ADMIN_EMAIL }}
+          TF_VAR_admin_password: ${{ secrets.ADMIN_PASSWORD}}
+          TF_VAR_frontend_url: ${{ secrets.FRONTEND_URL}}
+          TF_VAR_frontend_url_prod: ${{ secrets.FRONTEND_URL}}
+
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: terraform/prod.tfplan
+          retention-days: 1
+
+ build-and-push:
+    name: Build and Push Backend Image
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PRODUCTION }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PRODUCTION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Backend image
+        run: |
+          cd api
+          docker build -t $ECR_REGISTRY/$BACKEND_REPOSITORY:$GITHUB_SHA .
+          docker push $ECR_REGISTRY/$BACKEND_REPOSITORY:$GITHUB_SHA
+          docker tag $ECR_REGISTRY/$BACKEND_REPOSITORY:$GITHUB_SHA $ECR_REGISTRY/$BACKEND_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$BACKEND_REPOSITORY:latest
+
+ deploy-backend:
+    name: Deploy Backend to ECS
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PRODUCTION }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PRODUCTION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download Backend Task Definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition $BACKEND_TASK_DEFINITION \
+            --query 'taskDefinition' > backend-task-def.json
+
+      - name: Prepare Task Definition for Registration
+        run: |
+          # Remove metadata fields that are not valid for register-task-definition
+          jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy, .deregisteredAt)' \
+            backend-task-def.json > backend-task-def-clean.json
+          
+          # Update the image with new tag
+          jq --arg IMAGE "$ECR_REGISTRY/$BACKEND_REPOSITORY:$GITHUB_SHA" \
+            '.containerDefinitions[0].image = $IMAGE' \
+            backend-task-def-clean.json > backend-task-def-updated.json
+
+      - name: Register new Backend Task Definition
+        run: |
+          BACKEND_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://backend-task-def-updated.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          
+          echo "Registered backend task definition: $BACKEND_TASK_DEF_ARN"
+          echo "BACKEND_TASK_DEF_ARN=$BACKEND_TASK_DEF_ARN" >> $GITHUB_ENV
+
+      - name: Update Backend ECS Service
+        run: |
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_BACKEND_SERVICE --task-definition $BACKEND_TASK_DEF_ARN --force-new-deployment
+
+      - name: Wait for Deployment to Complete
+        continue-on-error: true
+        run: |
+          echo "⏳ Waiting for ECS service to stabilize..."
+          aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_BACKEND_SERVICE
+          echo "✅ ECS service is stable"
+
+      - name: Backend Health Check
+        run: |
+          ALB_DNS=$(aws elbv2 describe-load-balancers --names ${{ secrets.ALB_NAME_PRODUCTION }} --query 'LoadBalancers[0].DNSName' --output text)
+          echo "Checking backend health at http://$ALB_DNS/health"
+          for i in {1..10}; do
+            if curl -f -s "http://$ALB_DNS/health" > /dev/null; then
+              echo "✅ Backend health check passed"
+              break
+            elif [ $i -eq 10 ]; then
+              echo "❌ Backend health check failed after 10 attempts"
+              exit 1
+            else
+              echo "⏳ Backend not ready, attempt $i/10..."
+              sleep 30
+            fi
+          done
+
+ apply-terraform:
+    name: Apply Terraform Changes
+    runs-on: ubuntu-latest
+    needs: [terraform-plan, detect-terraform-changes]
+    if: github.ref == 'refs/heads/staging' && needs.detect-terraform-changes.outputs.terraform_changed == 'true'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PRODUCTION }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PRODUCTION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Build Lambda Deployment Package
+        run: |
+          cd lambda/email-service
+          mkdir -p dist
+          cd src
+          zip -r ../deployment.zip index.mjs
+          echo "Lambda deployment package created"
+
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init -backend-config="environments/prod.backend.conf"
+
+      - name: Terraform Plan
+        run: |
+          cd terraform
+          terraform plan -var-file="environments/prod.tfvars" -out=prod.tfplan
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD_PRODUCTION }}
+          TF_VAR_azure_tenant_id: ${{ secrets.AZURE_TENANT_ID_PRODUCTION }}
+          TF_VAR_azure_client_id: ${{ secrets.AZURE_CLIENT_ID_PRODUCTION }}
+          TF_VAR_azure_client_secret: ${{ secrets.AZURE_CLIENT_SECRET_PRODUCTION }}
+          TF_VAR_sender_email: ${{ secrets.SENDER_EMAIL_PRODUCTION }}
+          TF_VAR_db_name: ${{ secrets.DB_NAME }}
+          TF_VAR_db_username: ${{ secrets.DB_USERNAME}}
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET }}
+          TF_VAR_admin_email: ${{ secrets.ADMIN_EMAIL }}
+          TF_VAR_admin_password: ${{ secrets.ADMIN_PASSWORD}}
+          TF_VAR_frontend_url: ${{ secrets.FRONTEND_URL}}
+          TF_VAR_frontend_url_prod: ${{ secrets.FRONTEND_URL}}
+
+      - name: Terraform Apply
+        run: |
+          cd terraform
+          terraform apply prod.tfplan
+
+      - name: Terraform Output Summary
+        if: always()
+        run: |
+          cd terraform
+          echo "=== Terraform Outputs ==="
+          terraform output || echo "No outputs available"
+
+      - name: Verify Lambda Function
+        run: |
+          LAMBDA_NAME=$(cd terraform && terraform output -raw lambda_email_service_name 2>/dev/null || echo "microsoftGraphAPI")
+          echo "Verifying Lambda: $LAMBDA_NAME"
+          aws lambda get-function --function-name $LAMBDA_NAME --region ${{ env.AWS_REGION }} || echo "Lambda verification skipped"
+
+ notify:
+    name: Notify on Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, apply-terraform]
+    if: always()
+    steps:
+      - name: Notify on Full Success
+        if: needs.deploy-backend.result == 'success' && needs.apply-terraform.result == 'success'
+        run: |
+          echo "Production deployment fully successful!"
+          echo "Backend deployed"
+          echo "Terraform changes applied"
+          
+      - name: Notify on Terraform Success Only
+        if: needs.apply-terraform.result == 'success' && needs.deploy-backend.result != 'success'
+        run: |
+          echo "Partial success: Terraform applied, Backend had issues"
+          echo "Infrastructure updated"
+          echo "Backend deployment needs attention"
+          
+      - name: Notify on Backend Success Only
+        if: needs.deploy-backend.result == 'success' && needs.apply-terraform.result != 'success'
+        run: |
+          echo "⚠️ Partial success: Backend deployed, Terraform failed"
+          echo "✅ Backend updated"
+          echo "❌ Infrastructure changes not applied"
+          
+      - name: Notify on Full Failure
+        if: needs.deploy-backend.result != 'success' && needs.apply-terraform.result != 'success'
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Backend: ${{ needs.deploy-backend.result }}"
+          echo "Terraform: ${{ needs.apply-terraform.result }}"
