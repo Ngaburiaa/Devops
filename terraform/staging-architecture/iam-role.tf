@@ -1,4 +1,4 @@
-# Terraform Configuration for ITrack Staging IAM Role
+# Terraform Configuration for DevopsApp Staging IAM Role
 
 # Data source for current AWS account
 data "aws_caller_identity" "current" {}
@@ -23,9 +23,9 @@ resource "aws_iam_openid_connect_provider" "github_actions" {
 }
 
 # IAM Role for GitHub Actions Deployment
-resource "aws_iam_role" "itrack_staging_deployment" {
-  name        = "ITrack-Staging-Environment-Role"
-  description = "Deployment role for ITrack staging environment with comprehensive AWS service permissions"
+resource "aws_iam_role" "DevopsApp_staging_deployment" {
+  name        = "DevopsApp-Staging-Environment-Role"
+  description = "Deployment role for DevopsApp staging environment with comprehensive AWS service permissions"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -51,48 +51,48 @@ resource "aws_iam_role" "itrack_staging_deployment" {
   max_session_duration = 3600 # 1 hour
 
   tags = {
-    Name        = "ITrack-Staging-Environment-Role"
+    Name        = "DevopsApp-Staging-Environment-Role"
     Environment = "staging"
-    Project     = "ITrack"
+    Project     = "DevopsApp"
     ManagedBy   = "Terraform"
     Purpose     = "CICD-Deployment"
   }
 }
 
 # IAM Policy for Deployment
-resource "aws_iam_policy" "itrack_staging_deployment" {
-  name        = "ITrack-Staging-Deployment-Policy"
-  description = "Comprehensive deployment permissions for ITrack staging environment"
+resource "aws_iam_policy" "DevopsApp_staging_deployment" {
+  name        = "DevopsApp-Staging-Deployment-Policy"
+  description = "Comprehensive deployment permissions for DevopsApp staging environment"
   policy      = file("${path.module}/deployment-policy.json")
 
   tags = {
-    Name        = "ITrack-Staging-Deployment-Policy"
+    Name        = "DevopsApp-Staging-Deployment-Policy"
     Environment = "staging"
-    Project     = "ITrack"
+    Project     = "DevopsApp"
     ManagedBy   = "Terraform"
   }
 }
 
 # Attach Policy to Role
-resource "aws_iam_role_policy_attachment" "itrack_staging_deployment" {
-  role       = aws_iam_role.itrack_staging_deployment.name
-  policy_arn = aws_iam_policy.itrack_staging_deployment.arn
+resource "aws_iam_role_policy_attachment" "DevopsApp_staging_deployment" {
+  role       = aws_iam_role.DevopsApp_staging_deployment.name
+  policy_arn = aws_iam_policy.DevopsApp_staging_deployment.arn
 }
 
 # Outputs
 output "deployment_role_arn" {
   description = "ARN of the deployment role for GitHub Actions"
-  value       = aws_iam_role.itrack_staging_deployment.arn
+  value       = aws_iam_role.DevopsApp_staging_deployment.arn
 }
 
 output "deployment_role_name" {
   description = "Name of the deployment role"
-  value       = aws_iam_role.itrack_staging_deployment.name
+  value       = aws_iam_role.DevopsApp_staging_deployment.name
 }
 
 output "deployment_policy_arn" {
   description = "ARN of the deployment policy"
-  value       = aws_iam_policy.itrack_staging_deployment.arn
+  value       = aws_iam_policy.DevopsApp_staging_deployment.arn
 }
 
 output "github_oidc_provider_arn" {

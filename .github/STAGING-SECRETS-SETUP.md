@@ -77,7 +77,7 @@ us-east-1
 ### 6. BACKEND_REPOSITORY_STAGING
 **Value:** 
 ```
-itrack-api
+DevopsApp-api
 ```
 **Description:** Backend ECR repository name
 **Note:** Must match the repository name created in ECR
@@ -87,7 +87,7 @@ itrack-api
 ### 7. FRONTEND_REPOSITORY_STAGING
 **Value:** 
 ```
-itrack-ui
+DevopsApp-ui
 ```
 **Description:** Frontend ECR repository name
 **Note:** Must match the repository name created in ECR
@@ -99,7 +99,7 @@ itrack-ui
 ### 8. ECS_CLUSTER_STAGING
 **Value:** 
 ```
-itrack-cluster-staging
+DevopsApp-cluster-staging
 ```
 **Description:** ECS cluster name for staging
 **Note:** Must match the cluster name created by Terraform
@@ -109,7 +109,7 @@ itrack-cluster-staging
 ### 9. ECS_BACKEND_SERVICE_STAGING
 **Value:** 
 ```
-itrack-backend-service-staging
+DevopsApp-backend-service-staging
 ```
 **Description:** Backend ECS service name
 **Note:** Must match the service name created by Terraform
@@ -119,7 +119,7 @@ itrack-backend-service-staging
 ### 10. ECS_FRONTEND_SERVICE_STAGING
 **Value:** 
 ```
-itrack-frontend-service-staging
+DevopsApp-frontend-service-staging
 ```
 **Description:** Frontend ECS service name
 **Note:** Must match the service name created by Terraform
@@ -129,7 +129,7 @@ itrack-frontend-service-staging
 ### 11. BACKEND_TASK_DEFINITION_STAGING
 **Value:** 
 ```
-itrack-backend-staging
+DevopsApp-backend-staging
 ```
 **Description:** Backend ECS task definition name
 **Note:** Must match the task definition created by Terraform
@@ -139,7 +139,7 @@ itrack-backend-staging
 ### 12. FRONTEND_TASK_DEFINITION_STAGING
 **Value:** 
 ```
-itrack-frontend-staging
+DevopsApp-frontend-staging
 ```
 **Description:** Frontend ECS task definition name
 **Note:** Must match the task definition created by Terraform
@@ -151,7 +151,7 @@ itrack-frontend-staging
 ### 13. ALB_NAME_STAGING
 **Value:** 
 ```
-itrack-alb-staging
+DevopsApp-alb-staging
 ```
 **Description:** Application Load Balancer name
 **Note:** Must match the ALB name created by Terraform
@@ -204,14 +204,14 @@ Use this checklist to ensure all secrets are added:
 | 3 | `AWS_REGION_STAGING` | `us-east-1` | AWS Config |
 | 4 | `AWS_ACCOUNT_ID_STAGING` | `875486186130` | AWS Config |
 | 5 | `ECR_REGISTRY_STAGING` | `875486186130.dkr.ecr.us-east-1.amazonaws.com` | ECR |
-| 6 | `BACKEND_REPOSITORY_STAGING` | `itrack-api` | ECR |
-| 7 | `FRONTEND_REPOSITORY_STAGING` | `itrack-ui` | ECR |
-| 8 | `ECS_CLUSTER_STAGING` | `itrack-cluster-staging` | ECS |
-| 9 | `ECS_BACKEND_SERVICE_STAGING` | `itrack-backend-service-staging` | ECS |
-| 10 | `ECS_FRONTEND_SERVICE_STAGING` | `itrack-frontend-service-staging` | ECS |
-| 11 | `BACKEND_TASK_DEFINITION_STAGING` | `itrack-backend-staging` | ECS |
-| 12 | `FRONTEND_TASK_DEFINITION_STAGING` | `itrack-frontend-staging` | ECS |
-| 13 | `ALB_NAME_STAGING` | `itrack-alb-staging` | Load Balancer |
+| 6 | `BACKEND_REPOSITORY_STAGING` | `DevopsApp-api` | ECR |
+| 7 | `FRONTEND_REPOSITORY_STAGING` | `DevopsApp-ui` | ECR |
+| 8 | `ECS_CLUSTER_STAGING` | `DevopsApp-cluster-staging` | ECS |
+| 9 | `ECS_BACKEND_SERVICE_STAGING` | `DevopsApp-backend-service-staging` | ECS |
+| 10 | `ECS_FRONTEND_SERVICE_STAGING` | `DevopsApp-frontend-service-staging` | ECS |
+| 11 | `BACKEND_TASK_DEFINITION_STAGING` | `DevopsApp-backend-staging` | ECS |
+| 12 | `FRONTEND_TASK_DEFINITION_STAGING` | `DevopsApp-frontend-staging` | ECS |
+| 13 | `ALB_NAME_STAGING` | `DevopsApp-alb-staging` | Load Balancer |
 | 14 | `DB_PASSWORD_STAGING` | `YourSecurePassword123!` | Database |
 
 ---
@@ -238,17 +238,17 @@ If you don't have AWS access keys yet:
 For staging environment, all resources follow this pattern:
 
 ```
-itrack-{resource-type}-staging
+DevopsApp-{resource-type}-staging
 ```
 
 Examples:
-- Cluster: `itrack-cluster-staging`
-- Backend Service: `itrack-backend-service-staging`
-- Frontend Service: `itrack-frontend-service-staging`
-- Backend Task: `itrack-backend-staging`
-- Frontend Task: `itrack-frontend-staging`
-- Load Balancer: `itrack-alb-staging`
-- ECR Repos: `itrack-api`, `itrack-ui`
+- Cluster: `DevopsApp-cluster-staging`
+- Backend Service: `DevopsApp-backend-service-staging`
+- Frontend Service: `DevopsApp-frontend-service-staging`
+- Backend Task: `DevopsApp-backend-staging`
+- Frontend Task: `DevopsApp-frontend-staging`
+- Load Balancer: `DevopsApp-alb-staging`
+- ECR Repos: `DevopsApp-api`, `DevopsApp-ui`
 
 ---
 

@@ -13,19 +13,19 @@ This document lists all the GitHub repository secrets and variables required for
 ### AWS Account & ECR
 - **AWS_ACCOUNT_ID_STAGING**: `471744311346`
 - **ECR_REGISTRY_STAGING**: `471744311346.dkr.ecr.us-east-1.amazonaws.com`
-- **BACKEND_REPOSITORY_STAGING**: `itrack-api`
+- **BACKEND_REPOSITORY_STAGING**: `DevopsApp-api`
 
 ### ECS Configuration
-- **ECS_CLUSTER_STAGING**: `itrack-cluster-staging`
-- **ECS_BACKEND_SERVICE_STAGING**: `itrack-backend-staging`
-- **BACKEND_TASK_DEFINITION_STAGING**: `itrack-backend-staging`
-- **ALB_NAME_STAGING**: `itrack-alb-staging`
+- **ECS_CLUSTER_STAGING**: `DevopsApp-cluster-staging`
+- **ECS_BACKEND_SERVICE_STAGING**: `DevopsApp-backend-staging`
+- **BACKEND_TASK_DEFINITION_STAGING**: `DevopsApp-backend-staging`
+- **ALB_NAME_STAGING**: `DevopsApp-alb-staging`
 
 ### Database
 - **DB_PASSWORD_STAGING**: `TempPassword123!` (RDS PostgreSQL password)
 
 ### Frontend Environment
-- **VITE_API_URL_STAGING**: `http://itrack-alb-staging-191190332.us-east-1.elb.amazonaws.com`
+- **VITE_API_URL_STAGING**: `http://DevopsApp-alb-staging-191190332.us-east-1.elb.amazonaws.com`
   - Note: This should be updated to use CloudFront or custom domain if available
 
 ## Workflow Files
@@ -54,7 +54,7 @@ This document lists all the GitHub repository secrets and variables required for
 - `notify`: Sends deployment status notifications
 
 **Hardcoded Values** (already exist in Terraform):
-- S3 Bucket: `itrack-assets-staging`
+- S3 Bucket: `DevopsApp-assets-staging`
 - CloudFront Distribution ID: `EQ2HKU33EE0HF`
 
 ## Cost Comparison
@@ -75,13 +75,13 @@ This document lists all the GitHub repository secrets and variables required for
 ## Deployment URLs
 
 ### Backend API
-- **Load Balancer**: http://itrack-alb-staging-191190332.us-east-1.elb.amazonaws.com
-- **Health Check**: http://itrack-alb-staging-191190332.us-east-1.elb.amazonaws.com/health
-- **Login Endpoint**: http://itrack-alb-staging-191190332.us-east-1.elb.amazonaws.com/auth/login
+- **Load Balancer**: http://DevopsApp-alb-staging-191190332.us-east-1.elb.amazonaws.com
+- **Health Check**: http://DevopsApp-alb-staging-191190332.us-east-1.elb.amazonaws.com/health
+- **Login Endpoint**: http://DevopsApp-alb-staging-191190332.us-east-1.elb.amazonaws.com/auth/login
 
 ### Frontend UI
 - **CloudFront URL**: Check distribution EQ2HKU33EE0HF for domain
-- **S3 Bucket**: itrack-assets-staging (not public direct access)
+- **S3 Bucket**: DevopsApp-assets-staging (not public direct access)
 
 ## Next Steps
 
@@ -106,7 +106,7 @@ This document lists all the GitHub repository secrets and variables required for
 - Check CloudWatch logs for container errors
 
 ### If S3 deployment fails:
-- Verify S3 bucket `itrack-assets-staging` exists
+- Verify S3 bucket `DevopsApp-assets-staging` exists
 - Check bucket permissions allow sync from GitHub Actions
 - Verify CloudFront distribution ID `EQ2HKU33EE0HF` is correct
 

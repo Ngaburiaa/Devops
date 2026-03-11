@@ -1,4 +1,4 @@
-name: ITrack CI/CD Pipeline
+name: DevopsApp CI/CD Pipeline
 
 on:
   push:

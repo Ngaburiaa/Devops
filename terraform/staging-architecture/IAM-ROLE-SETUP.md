@@ -1,10 +1,10 @@
-# IAM Role Creation Guide: ITrack-Staging-Environment-Role
+# IAM Role Creation Guide: DevopsApp-Staging-Environment-Role
 
-This guide provides step-by-step instructions to create the IAM role required for deploying the ITrack staging infrastructure.
+This guide provides step-by-step instructions to create the IAM role required for deploying the DevopsApp staging infrastructure.
 
 ## Overview
 
-**Role Name:** `ITrack-Staging-Environment-Role`  
+**Role Name:** `DevopsApp-Staging-Environment-Role`  
 **Purpose:** CI/CD deployment role for GitHub Actions with comprehensive AWS permissions  
 **Trust Relationship:** GitHub Actions OIDC Provider (recommended) or IAM User
 
@@ -44,32 +44,32 @@ Instead of attaching individual policies, we'll create a custom policy.
 4. Click **Next: Tags**
 5. Add tags (optional):
    - Key: `Environment`, Value: `staging`
-   - Key: `Project`, Value: `ITrack`
+   - Key: `Project`, Value: `DevopsApp`
    - Key: `ManagedBy`, Value: `Terraform`
 6. Click **Next: Review**
-7. Policy name: `ITrack-Staging-Deployment-Policy`
-8. Description: `Comprehensive deployment permissions for ITrack staging environment`
+7. Policy name: `DevopsApp-Staging-Deployment-Policy`
+8. Description: `Comprehensive deployment permissions for DevopsApp staging environment`
 9. Click **Create policy**
 10. Go back to the role creation tab and refresh the policies
-11. Search for `ITrack-Staging-Deployment-Policy` and select it
+11. Search for `DevopsApp-Staging-Deployment-Policy` and select it
 12. Click **Next**
 
 ### Step 4: Name and Review
 
-1. **Role name:** `ITrack-Staging-Environment-Role`
-2. **Description:** `Deployment role for ITrack staging environment with comprehensive AWS service permissions`
+1. **Role name:** `DevopsApp-Staging-Environment-Role`
+2. **Description:** `Deployment role for DevopsApp staging environment with comprehensive AWS service permissions`
 3. **Tags (optional):**
    - Key: `Environment`, Value: `staging`
-   - Key: `Project`, Value: `ITrack`
+   - Key: `Project`, Value: `DevopsApp`
    - Key: `Purpose`, Value: `CICD-Deployment`
 4. Review the trust policy and permissions
 5. Click **Create role**
 
 ### Step 5: Get Role ARN
 
-1. Search for the role: `ITrack-Staging-Environment-Role`
+1. Search for the role: `DevopsApp-Staging-Environment-Role`
 2. Click on the role name
-3. Copy the **ARN** (e.g., `arn:aws:iam::875486186130:role/ITrack-Staging-Environment-Role`)
+3. Copy the **ARN** (e.g., `arn:aws:iam::875486186130:role/DevopsApp-Staging-Environment-Role`)
 4. Save this ARN - you'll need it for GitHub Actions
 
 ---
@@ -128,10 +128,10 @@ Create a file `trust-policy.json`:
 
 ```bash
 aws iam create-role \
-  --role-name ITrack-Staging-Environment-Role \
+  --role-name DevopsApp-Staging-Environment-Role \
   --assume-role-policy-document file://trust-policy.json \
-  --description "Deployment role for ITrack staging environment" \
-  --tags Key=Environment,Value=staging Key=Project,Value=ITrack
+  --description "Deployment role for DevopsApp staging environment" \
+  --tags Key=Environment,Value=staging Key=Project,Value=DevopsApp
 ```
 
 ### Step 3: Create and Attach Policy
@@ -141,24 +141,24 @@ Create the policy file `deployment-policy.json` (see complete policy below), the
 ```bash
 # Create the policy
 aws iam create-policy \
-  --policy-name ITrack-Staging-Deployment-Policy \
+  --policy-name DevopsApp-Staging-Deployment-Policy \
   --policy-document file://deployment-policy.json \
-  --description "Comprehensive deployment permissions for ITrack staging"
+  --description "Comprehensive deployment permissions for DevopsApp staging"
 
 # Attach the policy to the role
 aws iam attach-role-policy \
-  --role-name ITrack-Staging-Environment-Role \
-  --policy-arn arn:aws:iam::875486186130:policy/ITrack-Staging-Deployment-Policy
+  --role-name DevopsApp-Staging-Environment-Role \
+  --policy-arn arn:aws:iam::875486186130:policy/DevopsApp-Staging-Deployment-Policy
 ```
 
 ### Step 4: Verify Role Creation
 
 ```bash
 # Get role details
-aws iam get-role --role-name ITrack-Staging-Environment-Role
+aws iam get-role --role-name DevopsApp-Staging-Environment-Role
 
 # List attached policies
-aws iam list-attached-role-policies --role-name ITrack-Staging-Environment-Role
+aws iam list-attached-role-policies --role-name DevopsApp-Staging-Environment-Role
 ```
 
 ---
@@ -171,9 +171,9 @@ Create `iam-role.tf`:
 
 ```hcl
 # IAM Role for GitHub Actions Deployment
-resource "aws_iam_role" "itrack_staging_deployment" {
-  name        = "ITrack-Staging-Environment-Role"
-  description = "Deployment role for ITrack staging environment"
+resource "aws_iam_role" "DevopsApp_staging_deployment" {
+  name        = "DevopsApp-Staging-Environment-Role"
+  description = "Deployment role for DevopsApp staging environment"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -198,28 +198,28 @@ resource "aws_iam_role" "itrack_staging_deployment" {
 
   tags = {
     Environment = "staging"
-    Project     = "ITrack"
+    Project     = "DevopsApp"
     ManagedBy   = "Terraform"
   }
 }
 
 # IAM Policy for Deployment
-resource "aws_iam_policy" "itrack_staging_deployment" {
-  name        = "ITrack-Staging-Deployment-Policy"
-  description = "Comprehensive deployment permissions for ITrack staging environment"
+resource "aws_iam_policy" "DevopsApp_staging_deployment" {
+  name        = "DevopsApp-Staging-Deployment-Policy"
+  description = "Comprehensive deployment permissions for DevopsApp staging environment"
   policy      = file("${path.module}/deployment-policy.json")
 }
 
 # Attach Policy to Role
-resource "aws_iam_role_policy_attachment" "itrack_staging_deployment" {
-  role       = aws_iam_role.itrack_staging_deployment.name
-  policy_arn = aws_iam_policy.itrack_staging_deployment.arn
+resource "aws_iam_role_policy_attachment" "DevopsApp_staging_deployment" {
+  role       = aws_iam_role.DevopsApp_staging_deployment.name
+  policy_arn = aws_iam_policy.DevopsApp_staging_deployment.arn
 }
 
 # Output the Role ARN
 output "deployment_role_arn" {
   description = "ARN of the deployment role for GitHub Actions"
-  value       = aws_iam_role.itrack_staging_deployment.arn
+  value       = aws_iam_role.DevopsApp_staging_deployment.arn
 }
 
 # Data source for current AWS account
@@ -478,7 +478,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::875486186130:role/ITrack-Staging-Environment-Role
+          role-to-assume: arn:aws:iam::875486186130:role/DevopsApp-Staging-Environment-Role
           aws-region: us-east-1
           role-session-name: GitHubActions-Deployment
 ```
@@ -492,7 +492,7 @@ jobs:
 ```bash
 # Using AWS CLI
 aws sts assume-role \
-  --role-arn arn:aws:iam::875486186130:role/ITrack-Staging-Environment-Role \
+  --role-arn arn:aws:iam::875486186130:role/DevopsApp-Staging-Environment-Role \
   --role-session-name test-session
 ```
 
@@ -523,7 +523,7 @@ Create a test workflow or run the existing deployment workflow and check the log
 2. **Resource Restrictions:** Add resource-level restrictions where possible:
    ```json
    {
-     "Resource": "arn:aws:ecs:us-east-1:875486186130:cluster/itrack-*"
+     "Resource": "arn:aws:ecs:us-east-1:875486186130:cluster/DevopsApp-*"
    }
    ```
 3. **Condition Keys:** Add conditions to limit actions:
@@ -548,7 +548,7 @@ Create a test workflow or run the existing deployment workflow and check the log
 
 **Solution:** Check the trust policy allows your identity:
 ```bash
-aws iam get-role --role-name ITrack-Staging-Environment-Role --query 'Role.AssumeRolePolicyDocument'
+aws iam get-role --role-name DevopsApp-Staging-Environment-Role --query 'Role.AssumeRolePolicyDocument'
 ```
 
 ### Issue: "Access Denied" for specific action
@@ -556,8 +556,8 @@ aws iam get-role --role-name ITrack-Staging-Environment-Role --query 'Role.Assum
 **Solution:** Verify the policy includes the required permission:
 ```bash
 aws iam get-role-policy \
-  --role-name ITrack-Staging-Environment-Role \
-  --policy-name ITrack-Staging-Deployment-Policy
+  --role-name DevopsApp-Staging-Environment-Role \
+  --policy-name DevopsApp-Staging-Deployment-Policy
 ```
 
 ### Issue: OIDC provider not found
@@ -573,15 +573,15 @@ To delete the role:
 ```bash
 # Detach policies
 aws iam detach-role-policy \
-  --role-name ITrack-Staging-Environment-Role \
-  --policy-arn arn:aws:iam::875486186130:policy/ITrack-Staging-Deployment-Policy
+  --role-name DevopsApp-Staging-Environment-Role \
+  --policy-arn arn:aws:iam::875486186130:policy/DevopsApp-Staging-Deployment-Policy
 
 # Delete the role
-aws iam delete-role --role-name ITrack-Staging-Environment-Role
+aws iam delete-role --role-name DevopsApp-Staging-Environment-Role
 
 # Delete the policy
 aws iam delete-policy \
-  --policy-arn arn:aws:iam::875486186130:policy/ITrack-Staging-Deployment-Policy
+  --policy-arn arn:aws:iam::875486186130:policy/DevopsApp-Staging-Deployment-Policy
 ```
 
 ---

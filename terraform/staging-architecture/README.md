@@ -1,6 +1,6 @@
-# ITrack Staging Architecture Documentation
+# DevopsApp Staging Architecture Documentation
 
-This folder contains comprehensive documentation and configuration files for the ITrack staging environment infrastructure.
+This folder contains comprehensive documentation and configuration files for the DevopsApp staging environment infrastructure.
 
 ## 📁 Contents
 
@@ -57,7 +57,7 @@ After creating the role, update your GitHub repository:
    - name: Configure AWS credentials
      uses: aws-actions/configure-aws-credentials@v4
      with:
-       role-to-assume: arn:aws:iam::875486186130:role/ITrack-Staging-Environment-Role
+       role-to-assume: arn:aws:iam::875486186130:role/DevopsApp-Staging-Environment-Role
        aws-region: us-east-1
    ```
 
@@ -97,10 +97,10 @@ terraform apply -var-file="environments/staging.tfvars"
 └─────────────────────────────────────────────────────────┘
 ```
 
-## 🔐 IAM Role: ITrack-Staging-Environment-Role
+## 🔐 IAM Role: DevopsApp-Staging-Environment-Role
 
 ### Purpose
-CI/CD deployment role for GitHub Actions with permissions to manage all AWS resources required for the ITrack staging environment.
+CI/CD deployment role for GitHub Actions with permissions to manage all AWS resources required for the DevopsApp staging environment.
 
 ### Key Permissions
 - ✅ ECS (Container orchestration)
@@ -240,7 +240,7 @@ Once set up, GitHub Actions will automatically:
 Use this checklist for initial setup:
 
 - [ ] Read ARCHITECTURE.md
-- [ ] Create IAM role (ITrack-Staging-Environment-Role)
+- [ ] Create IAM role (DevopsApp-Staging-Environment-Role)
 - [ ] Set up GitHub OIDC provider
 - [ ] Configure GitHub secrets (15 secrets)
 - [ ] Initialize Terraform backend
@@ -263,7 +263,7 @@ After deployment, verify:
 ```bash
 # Check ECS cluster
 aws ecs list-clusters
-aws ecs describe-clusters --clusters itrack-cluster-production
+aws ecs describe-clusters --clusters DevopsApp-cluster-production
 
 # Check ECR repositories
 aws ecr describe-repositories
@@ -272,7 +272,7 @@ aws ecr describe-repositories
 aws rds describe-db-instances
 
 # Check ALB
-aws elbv2 describe-load-balancers --names itrack-alb-production
+aws elbv2 describe-load-balancers --names DevopsApp-alb-production
 
 # Check S3 buckets
 aws s3 ls
@@ -326,7 +326,7 @@ For questions or issues:
 
 ## 📄 License
 
-Internal documentation for GRIFFINGlobalTech ITrack project.
+Internal documentation for GRIFFINGlobalTech DevopsApp project.
 
 ---
 

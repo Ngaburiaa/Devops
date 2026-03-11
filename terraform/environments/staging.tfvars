@@ -5,11 +5,11 @@
 aws_region        = "us-east-1"
 aws_account_id    = "875486186130"
 environment       = "staging"
-project_name      = "itrack"
-frontend_prod_url = "https://itrack-frontend-staging.thejitutech.com"
-api_base_url_prod = "https://itrack-api-staging.thejitutech.com"
-frontend_url      = "https://itrack-frontend-staging.thejitutech.com"
-api_base_url      = "https://itrack-api-staging.thejitutech.com"
+project_name      = "DevopsApp"
+frontend_prod_url = "https://DevopsApp-frontend-staging.thejitutech.com"
+api_base_url_prod = "https://DevopsApp-api-staging.thejitutech.com"
+frontend_url      = "https://DevopsApp-frontend-staging.thejitutech.com"
+api_base_url      = "https://DevopsApp-api-staging.thejitutech.com"
 # VPC Configuration
 vpc_cidr        = "10.1.0.0/16" # Different CIDR for staging
 az_count        = 2
@@ -22,10 +22,10 @@ health_check_path = "/health"
 
 # Security Configuration (Restricted for staging)
 allowed_ips     = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"] # Private networks only
-allowed_domains = ["staging.itrack.com"]
+allowed_domains = ["staging.DevopsApp.com"]
 
 # Database Configuration (Non-Sensitive)
-db_subnet_group_name = "itrack-vpc-db-subnet-group-v2"
+db_subnet_group_name = "DevopsApp-vpc-db-subnet-group-v2"
 db_instance_class = "db.t3.micro" # Smaller instance for staging
 # Note: db_password should be set via environment variable or AWS Secrets Manager
 # Export TF_VAR_db_password="your_password_here" or use AWS Secrets Manager
@@ -36,10 +36,10 @@ ecs_cpu           = 256
 ecs_memory        = 512
 
 # Notification
-notification_emails = ["dev-alerts@itrack.com"]
+notification_emails = ["dev-alerts@DevopsApp.com"]
 
 # DNS Configuration
-domain_names = ["thejitutech.com", "itrack-frontend-staging.thejitutech.com"]
+domain_names = ["thejitutech.com", "DevopsApp-frontend-staging.thejitutech.com"]
 
 # CloudFront Cache Settings
 cloudfront_cache_settings = {
@@ -59,14 +59,14 @@ cloudfront_cache_settings = {
 # Lambda Functions Configuration - DISABLED (using ECS backend instead)
 # lambda_functions = [
 #   {
-#     name        = "itrack-api-handler"
+#     name        = "DevopsApp-api-handler"
 #     runtime     = "nodejs16.x"
 #     handler     = "index.handler"
 #     timeout     = 30
 #     memory_size = 128
-#     zip_file    = "./lambda/itrack-api-handler.zip"
+#     zip_file    = "./lambda/DevopsApp-api-handler.zip"
 #     environment_variables = {
-#       DYNAMODB_TABLE = "itrack-items"
+#       DYNAMODB_TABLE = "DevopsApp-items"
 #     }
 #   }
 # ]
@@ -75,7 +75,7 @@ lambda_functions = []
 # DynamoDB Tables Configuration
 dynamodb_tables = [
   {
-    name           = "itrack-items"
+    name           = "DevopsApp-items"
     hash_key       = "id"
     range_key      = ""
     billing_mode   = "PAY_PER_REQUEST"

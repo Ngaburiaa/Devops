@@ -22,24 +22,24 @@ Navigate to your GitHub repository → **Settings** → **Secrets and variables*
 | Secret Name | Description | Example Value |
 |-------------|-------------|---------------|
 | `ECR_REGISTRY_STAGING` | ECR registry URL | `875486186130.dkr.ecr.us-east-1.amazonaws.com` |
-| `BACKEND_REPOSITORY_STAGING` | Backend ECR repository name | `itrack-api` |
-| `FRONTEND_REPOSITORY_STAGING` | Frontend ECR repository name | `itrack-ui` |
+| `BACKEND_REPOSITORY_STAGING` | Backend ECR repository name | `DevopsApp-api` |
+| `FRONTEND_REPOSITORY_STAGING` | Frontend ECR repository name | `DevopsApp-ui` |
 
 ### ECS Configuration
 
 | Secret Name | Description | Example Value |
 |-------------|-------------|---------------|
-| `ECS_CLUSTER_STAGING` | ECS cluster name | `itrack-cluster-staging` |
-| `ECS_BACKEND_SERVICE_STAGING` | Backend ECS service name | `itrack-backend-service-staging` |
-| `ECS_FRONTEND_SERVICE_STAGING` | Frontend ECS service name | `itrack-frontend-service-staging` |
-| `BACKEND_TASK_DEFINITION_STAGING` | Backend task definition name | `itrack-backend-staging` |
-| `FRONTEND_TASK_DEFINITION_STAGING` | Frontend task definition name | `itrack-frontend-staging` |
+| `ECS_CLUSTER_STAGING` | ECS cluster name | `DevopsApp-cluster-staging` |
+| `ECS_BACKEND_SERVICE_STAGING` | Backend ECS service name | `DevopsApp-backend-service-staging` |
+| `ECS_FRONTEND_SERVICE_STAGING` | Frontend ECS service name | `DevopsApp-frontend-service-staging` |
+| `BACKEND_TASK_DEFINITION_STAGING` | Backend task definition name | `DevopsApp-backend-staging` |
+| `FRONTEND_TASK_DEFINITION_STAGING` | Frontend task definition name | `DevopsApp-frontend-staging` |
 
 ### Load Balancer Configuration
 
 | Secret Name | Description | Example Value |
 |-------------|-------------|---------------|
-| `ALB_NAME_STAGING` | Application Load Balancer name | `itrack-alb-staging` |
+| `ALB_NAME_STAGING` | Application Load Balancer name | `DevopsApp-alb-staging` |
 
 ### Database Configuration
 

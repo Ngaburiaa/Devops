@@ -18,7 +18,7 @@ variable "environment" {
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "itrack"
+  default     = "DevopsApp"
 }
 
 variable "vpc_cidr" {
@@ -100,7 +100,7 @@ variable "dynamodb_tables" {
   }))
   default = [
     {
-      name           = "itrack-items"
+      name           = "DevopsApp-items"
       hash_key       = "id"
       range_key      = ""
       billing_mode   = "PAY_PER_REQUEST"
@@ -120,7 +120,7 @@ variable "dynamodb_tables" {
 variable "db_name" {
   description = "Name of the RDS database"
   type        = string
-  default     = "itrack"
+  default     = "DevopsApp"
 }
 
 variable "db_username" {
@@ -155,14 +155,14 @@ variable "lambda_functions" {
   }))
   default = [
     {
-      name        = "itrack-api-handler"
+      name        = "DevopsApp-api-handler"
       runtime     = "nodejs16.x"
       handler     = "index.handler"
       timeout     = 30
       memory_size = 128
-      zip_file    = "../lambda/itrack-api-handler.zip"
+      zip_file    = "../lambda/DevopsApp-api-handler.zip"
       environment_variables = {
-        DYNAMODB_TABLE = "itrack-items"
+        DYNAMODB_TABLE = "DevopsApp-items"
       }
     }
   ]
@@ -291,7 +291,7 @@ variable "jwt_secret" {
 variable "admin_email" {
   description = "Admin email for initial setup"
   type        = string
-  default     = "admin@itrack.com"
+  default     = "admin@DevopsApp.com"
 }
 
 variable "admin_password" {
@@ -332,20 +332,20 @@ variable "sender_email" {
 variable "frontend_url" {
   description = "Base URL of the react frontend application"
   type        = string
-  default     = "https://itrack-frontend.thejitutech.com"
+  default     = "https://DevopsApp-frontend.thejitutech.com"
 }
 
 
 variable "frontend_prod_url" {
   description = "Production URL of the react frontend application"
   type        = string
-  default     = "https://itrack-frontend.thejitutech.com"
+  default     = "https://DevopsApp-frontend.thejitutech.com"
 }
 
 variable "api_base_url" {
   description = "Base URL of the backend application"
   type        = string
-  default     = "https://itrack-api.thejitutech.com"
+  default     = "https://DevopsApp-api.thejitutech.com"
 
 }
 
@@ -353,5 +353,5 @@ variable "api_base_url" {
 variable "api_base_url_prod" {
   description = "Production URL of the backend application"
   type        = string
-  default     = "https://itrack-api.thejitutech.com"
+  default     = "https://DevopsApp-api.thejitutech.com"
 }

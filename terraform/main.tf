@@ -15,7 +15,7 @@ provider "aws" {
   region = var.aws_region
   default_tags {
     tags = {
-      Project     = "ITrack"
+      Project     = "DevopsApp"
       Environment = var.environment
       ManagedBy   = "Terraform"
     }
@@ -28,7 +28,7 @@ provider "aws" {
   region = var.cross_region_backup_region
   default_tags {
     tags = {
-      Project     = "ITrack"
+      Project     = "DevopsApp"
       Environment = var.environment
       ManagedBy   = "Terraform"
     }

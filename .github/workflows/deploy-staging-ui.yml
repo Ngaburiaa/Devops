@@ -54,8 +54,8 @@ jobs:
 
     - name: Sync to S3
       run: |
-        aws s3 sync ui/dist s3://itrack-assets-staging --delete
-        echo "✅ UI files synced to S3 bucket: itrack-assets-staging"
+        aws s3 sync ui/dist s3://DevopsApp-assets-staging --delete
+        echo "✅ UI files synced to S3 bucket: DevopsApp-assets-staging"
 
     - name: Create CloudFront invalidation
       run: |

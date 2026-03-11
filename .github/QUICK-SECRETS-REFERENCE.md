@@ -29,42 +29,42 @@ us-east-1
 
 ### 6. BACKEND_REPOSITORY_STAGING
 ```
-itrack-api
+DevopsApp-api
 ```
 
 ### 7. FRONTEND_REPOSITORY_STAGING
 ```
-itrack-ui
+DevopsApp-ui
 ```
 
 ### 8. ECS_CLUSTER_STAGING
 ```
-itrack-cluster-staging
+DevopsApp-cluster-staging
 ```
 
 ### 9. ECS_BACKEND_SERVICE_STAGING
 ```
-itrack-backend-service-staging
+DevopsApp-backend-service-staging
 ```
 
 ### 10. ECS_FRONTEND_SERVICE_STAGING
 ```
-itrack-frontend-service-staging
+DevopsApp-frontend-service-staging
 ```
 
 ### 11. BACKEND_TASK_DEFINITION_STAGING
 ```
-itrack-backend-staging
+DevopsApp-backend-staging
 ```
 
 ### 12. FRONTEND_TASK_DEFINITION_STAGING
 ```
-itrack-frontend-staging
+DevopsApp-frontend-staging
 ```
 
 ### 13. ALB_NAME_STAGING
 ```
-itrack-alb-staging
+DevopsApp-alb-staging
 ```
 
 ### 14. DB_PASSWORD_STAGING

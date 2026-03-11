@@ -29,34 +29,34 @@ ECR_REGISTRY_STAGING
 Value: 471744311346.dkr.ecr.us-east-1.amazonaws.com
 
 BACKEND_REPOSITORY_STAGING
-Value: itrack-api
+Value: DevopsApp-api
 
 FRONTEND_REPOSITORY_STAGING
-Value: itrack-ui
+Value: DevopsApp-ui
 ```
 
 ### ECS (Container Service)
 ```
 ECS_CLUSTER_STAGING
-Value: itrack-cluster-staging
+Value: DevopsApp-cluster-staging
 
 ECS_BACKEND_SERVICE_STAGING
-Value: itrack-backend-service-staging
+Value: DevopsApp-backend-service-staging
 
 ECS_FRONTEND_SERVICE_STAGING
-Value: itrack-frontend-service-staging
+Value: DevopsApp-frontend-service-staging
 
 BACKEND_TASK_DEFINITION_STAGING
-Value: itrack-backend-staging
+Value: DevopsApp-backend-staging
 
 FRONTEND_TASK_DEFINITION_STAGING
-Value: itrack-frontend-staging
+Value: DevopsApp-frontend-staging
 ```
 
 ### Load Balancer
 ```
 ALB_NAME_STAGING
-Value: itrack-alb-staging
+Value: DevopsApp-alb-staging
 ```
 
 ### Database Password
@@ -71,12 +71,12 @@ Note: Use the same password you configured in staging.tfvars or generate a new s
 ## 🔗 Additional Resource Information
 
 ### ALB (Application Load Balancer)
-- **DNS Name**: itrack-alb-staging-191190332.us-east-1.elb.amazonaws.com
-- **ARN**: arn:aws:elasticloadbalancing:us-east-1:471744311346:loadbalancer/app/itrack-alb-staging/edd058782d9001fe
+- **DNS Name**: DevopsApp-alb-staging-191190332.us-east-1.elb.amazonaws.com
+- **ARN**: arn:aws:elasticloadbalancing:us-east-1:471744311346:loadbalancer/app/DevopsApp-alb-staging/edd058782d9001fe
 
 ### ECR Repository URLs
-- **Backend**: 471744311346.dkr.ecr.us-east-1.amazonaws.com/itrack-api
-- **Frontend**: 471744311346.dkr.ecr.us-east-1.amazonaws.com/itrack-ui
+- **Backend**: 471744311346.dkr.ecr.us-east-1.amazonaws.com/DevopsApp-api
+- **Frontend**: 471744311346.dkr.ecr.us-east-1.amazonaws.com/DevopsApp-ui
 
 ### API Gateway
 - **URL**: https://wg5bibsh2h.execute-api.us-east-1.amazonaws.com/staging
@@ -87,16 +87,16 @@ Note: Use the same password you configured in staging.tfvars or generate a new s
 - **Distribution ID**: EQ2HKU33EE0HF
 
 ### S3 Bucket
-- **Name**: itrack-assets-staging
+- **Name**: DevopsApp-assets-staging
 
 ### VPC
 - **ID**: vpc-03af82164f9e4ae4f
 
 ### DynamoDB Table
-- **Name**: itrack-itrack-items-staging
+- **Name**: DevopsApp-DevopsApp-items-staging
 
 ### Backup Vault
-- **ARN**: arn:aws:backup:us-east-1:471744311346:backup-vault:itrack-backup-vault-staging
+- **ARN**: arn:aws:backup:us-east-1:471744311346:backup-vault:DevopsApp-backup-vault-staging
 
 ---
 
@@ -129,14 +129,14 @@ Note: Use the same password you configured in staging.tfvars or generate a new s
 - [ ] AWS_REGION_STAGING = us-east-1
 - [ ] AWS_ACCOUNT_ID_STAGING = 471744311346
 - [ ] ECR_REGISTRY_STAGING = 471744311346.dkr.ecr.us-east-1.amazonaws.com
-- [ ] BACKEND_REPOSITORY_STAGING = itrack-api
-- [ ] FRONTEND_REPOSITORY_STAGING = itrack-ui
-- [ ] ECS_CLUSTER_STAGING = itrack-cluster-staging
-- [ ] ECS_BACKEND_SERVICE_STAGING = itrack-backend-service-staging
-- [ ] ECS_FRONTEND_SERVICE_STAGING = itrack-frontend-service-staging
-- [ ] BACKEND_TASK_DEFINITION_STAGING = itrack-backend-staging
-- [ ] FRONTEND_TASK_DEFINITION_STAGING = itrack-frontend-staging
-- [ ] ALB_NAME_STAGING = itrack-alb-staging
+- [ ] BACKEND_REPOSITORY_STAGING = DevopsApp-api
+- [ ] FRONTEND_REPOSITORY_STAGING = DevopsApp-ui
+- [ ] ECS_CLUSTER_STAGING = DevopsApp-cluster-staging
+- [ ] ECS_BACKEND_SERVICE_STAGING = DevopsApp-backend-service-staging
+- [ ] ECS_FRONTEND_SERVICE_STAGING = DevopsApp-frontend-service-staging
+- [ ] BACKEND_TASK_DEFINITION_STAGING = DevopsApp-backend-staging
+- [ ] FRONTEND_TASK_DEFINITION_STAGING = DevopsApp-frontend-staging
+- [ ] ALB_NAME_STAGING = DevopsApp-alb-staging
 - [ ] DB_PASSWORD_STAGING = <your-secure-password>
 
 ---
@@ -147,7 +147,7 @@ Note: Use the same password you configured in staging.tfvars or generate a new s
 2. Push a commit to `feature/staging-v1` branch to trigger the workflow
 3. Monitor the GitHub Actions workflow execution
 4. Verify deployments to ECS services
-5. Access your application at: http://itrack-alb-staging-191190332.us-east-1.elb.amazonaws.com
+5. Access your application at: http://DevopsApp-alb-staging-191190332.us-east-1.elb.amazonaws.com
 
 ---
 

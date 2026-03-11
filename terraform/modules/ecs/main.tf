@@ -280,7 +280,7 @@ resource "aws_lb_listener" "https" {
 #
 #   condition {
 #     host_header {
-#       values = ["www.itrack.com", "itrack.com"]
+#       values = ["www.DevopsApp.com", "DevopsApp.com"]
 #     }
 #   }
 # }
@@ -345,7 +345,7 @@ resource "aws_ecs_task_definition" "backend" {
         },
         {
           name  = "ADMIN_EMAIL"
-          value = var.admin_email != "" ? var.admin_email : "admin@itrack.com"
+          value = var.admin_email != "" ? var.admin_email : "admin@DevopsApp.com"
         },
         {
           name  = "ADMIN_PASSWORD"

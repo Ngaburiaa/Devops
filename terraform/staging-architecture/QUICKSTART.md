@@ -1,6 +1,6 @@
-# Quick Start: Creating ITrack-Staging-Environment-Role
+# Quick Start: Creating DevopsApp-Staging-Environment-Role
 
-This guide provides the fastest way to create the IAM role needed for deploying the ITrack staging infrastructure.
+This guide provides the fastest way to create the IAM role needed for deploying the DevopsApp staging infrastructure.
 
 ## ⚡ 5-Minute Setup (Using Terraform)
 
@@ -39,8 +39,8 @@ This guide provides the fastest way to create the IAM role needed for deploying 
 
 ### What Gets Created?
 - ✅ GitHub OIDC provider
-- ✅ IAM role: `ITrack-Staging-Environment-Role`
-- ✅ IAM policy: `ITrack-Staging-Deployment-Policy` (with 18 service permissions)
+- ✅ IAM role: `DevopsApp-Staging-Environment-Role`
+- ✅ IAM policy: `DevopsApp-Staging-Deployment-Policy` (with 18 service permissions)
 - ✅ Policy attachment to role
 
 ---
@@ -59,7 +59,7 @@ This guide provides the fastest way to create the IAM role needed for deploying 
 2. Click **JSON** tab
 3. Copy content from `deployment-policy.json`
 4. Paste it
-5. Name: `ITrack-Staging-Deployment-Policy`
+5. Name: `DevopsApp-Staging-Deployment-Policy`
 6. Click **Create policy**
 
 ### Step 3: Create Role
@@ -70,13 +70,13 @@ This guide provides the fastest way to create the IAM role needed for deploying 
 5. GitHub organization: `GRIFFINGlobalTech`
 6. GitHub repository: `rs-feb-25`
 7. Click **Next**
-8. Search and select `ITrack-Staging-Deployment-Policy`
+8. Search and select `DevopsApp-Staging-Deployment-Policy`
 9. Click **Next**
-10. Role name: `ITrack-Staging-Environment-Role`
+10. Role name: `DevopsApp-Staging-Environment-Role`
 11. Click **Create role**
 
 ### Step 4: Get Role ARN
-1. Search for: `ITrack-Staging-Environment-Role`
+1. Search for: `DevopsApp-Staging-Environment-Role`
 2. Copy the ARN
 3. Save it for GitHub Actions configuration
 
@@ -103,7 +103,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::875486186130:role/ITrack-Staging-Environment-Role
+          role-to-assume: arn:aws:iam::875486186130:role/DevopsApp-Staging-Environment-Role
           aws-region: us-east-1
           role-session-name: GitHubActions-Staging
 ```
@@ -119,7 +119,7 @@ Test the role:
 ```bash
 # Assume the role (test)
 aws sts assume-role \
-  --role-arn arn:aws:iam::875486186130:role/ITrack-Staging-Environment-Role \
+  --role-arn arn:aws:iam::875486186130:role/DevopsApp-Staging-Environment-Role \
   --role-session-name test
 
 # Test ECS permissions
@@ -176,10 +176,10 @@ terraform init && terraform apply
 terraform output deployment_role_arn
 
 # Verify role
-aws iam get-role --role-name ITrack-Staging-Environment-Role
+aws iam get-role --role-name DevopsApp-Staging-Environment-Role
 
 # List attached policies
-aws iam list-attached-role-policies --role-name ITrack-Staging-Environment-Role
+aws iam list-attached-role-policies --role-name DevopsApp-Staging-Environment-Role
 
 # Test role assumption
 aws sts assume-role \

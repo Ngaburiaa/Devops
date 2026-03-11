@@ -2,11 +2,11 @@
 aws_region        = "us-east-1"
 aws_account_id    = "471744311346"
 environment       = "production"
-project_name      = "itrack"
-frontend_url      = "https://itrack-frontend.thejitutech.com"
-frontend_prod_url = "https://itrack-frontend.thejitutech.com"
-api_base_url_prod = "https://itrack-api.thejitutech.com"
-api_base_url      = "https://itrack-api.thejitutech.com"
+project_name      = "DevopsApp"
+frontend_url      = "https://DevopsApp-frontend.thejitutech.com"
+frontend_prod_url = "https://DevopsApp-frontend.thejitutech.com"
+api_base_url_prod = "https://DevopsApp-api.thejitutech.com"
+api_base_url      = "https://DevopsApp-api.thejitutech.com"
 
 # VPC Configuration
 vpc_cidr        = "10.2.0.0/16"
@@ -32,13 +32,13 @@ ecs_cpu           = 512
 ecs_memory        = 1024
 
 # Notification
-notification_emails = ["itrack@griffinglobaltech.com"]
+notification_emails = ["DevopsApp@griffinglobaltech.com"]
 
 # DNS Configuration
 # NOTE: thejitutech.com is currently used by staging CloudFront
 # Set to empty for now - production will use CloudFront default URL (*.cloudfront.net)
 # To use custom domain later: remove from staging, add SSL cert, then set here
-domain_names = ["itrack-frontend.thejitutech.com"]
+domain_names = ["DevopsApp-frontend.thejitutech.com"]
 
 
 # CloudFront Cache Settings
@@ -62,14 +62,14 @@ cloudfront_cache_settings = {
 # Lambda Functions Configuration - DISABLED (using ECS backend instead)
 # lambda_functions = [
 #   {
-#     name        = "itrack-api-handler"
+#     name        = "DevopsApp-api-handler"
 #     runtime     = "nodejs16.x"
 #     handler     = "index.handler"
 #     timeout     = 30
 #     memory_size = 128
-#     zip_file    = "./lambda/itrack-api-handler.zip"
+#     zip_file    = "./lambda/DevopsApp-api-handler.zip"
 #     environment_variables = {
-#       DYNAMODB_TABLE = "itrack-items"
+#       DYNAMODB_TABLE = "DevopsApp-items"
 #     }
 #   }
 # ]
@@ -78,7 +78,7 @@ lambda_functions = []
 # DynamoDB Tables Configuration
 dynamodb_tables = [
   {
-    name           = "itrack-items"
+    name           = "DevopsApp-items"
     hash_key       = "id"
     range_key      = ""
     billing_mode   = "PAY_PER_REQUEST"

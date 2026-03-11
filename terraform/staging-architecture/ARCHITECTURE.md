@@ -1,8 +1,8 @@
-# ITrack AWS Staging Architecture
+# DevopsApp AWS Staging Architecture
 
 ## Overview
 
-This document describes the AWS infrastructure architecture for the ITrack staging environment. The architecture is designed to be scalable, secure, and cost-effective while supporting both frontend (ReactJS) and backend (Node.js) applications.
+This document describes the AWS infrastructure architecture for the DevopsApp staging environment. The architecture is designed to be scalable, secure, and cost-effective while supporting both frontend (ReactJS) and backend (Node.js) applications.
 
 ## Architecture Diagram
 
@@ -59,7 +59,7 @@ This document describes the AWS infrastructure architecture for the ITrack stagi
 │                                                                             │
 │  ┌───────────────────────────────────────────────────────────────────────┐ │
 │  │                       Application Load Balancer                       │ │
-│  │                   itrack-alb-production                      │ │
+│  │                   DevopsApp-alb-production                      │ │
 │  │                                                                       │ │
 │  │  ┌─────────────────┐              ┌─────────────────┐               │ │
 │  │  │  Target Group   │              │  Target Group   │               │ │
@@ -138,15 +138,15 @@ This document describes the AWS infrastructure architecture for the ITrack stagi
 
 **Module:** `terraform/modules/ecs/`
 
-- **ECS Cluster:** itrack-cluster-production
+- **ECS Cluster:** DevopsApp-cluster-production
 - **Services:**
   - **Backend Service:** Node.js application
-    - Task Definition: itrack-backend-production
+    - Task Definition: DevopsApp-backend-production
     - Container Port: 3000
     - Desired Count: 2 (auto-scaling enabled)
     - CPU: 512, Memory: 1024 MB
   - **Frontend Service:** ReactJS application
-    - Task Definition: itrack-frontend-production
+    - Task Definition: DevopsApp-frontend-production
     - Container Port: 80
     - Desired Count: 2 (auto-scaling enabled)
     - CPU: 256, Memory: 512 MB
@@ -159,8 +159,8 @@ This document describes the AWS infrastructure architecture for the ITrack stagi
 **Module:** `terraform/modules/ecr/`
 
 - **Repositories:**
-  - itrack-api (Backend images)
-  - itrack-ui (Frontend images)
+  - DevopsApp-api (Backend images)
+  - DevopsApp-ui (Frontend images)
 - **Image Scanning:** Enabled on push
 - **Lifecycle Policy:** Keep last 10 images
 
@@ -168,7 +168,7 @@ This document describes the AWS infrastructure architecture for the ITrack stagi
 
 **Module:** Included in `terraform/modules/ecs/`
 
-- **Load Balancer:** itrack-alb-production
+- **Load Balancer:** DevopsApp-alb-production
 - **Target Groups:**
   - Backend: Port 3000, Health check: /api/health
   - Frontend: Port 80, Health check: /
@@ -338,15 +338,15 @@ This document describes the AWS infrastructure architecture for the ITrack stagi
 - **Access:** SSH from specific IP addresses only
 - **Key Pair:** Required for authentication
 
-## IAM Role: ITrack-Staging-Environment-Role
+## IAM Role: DevopsApp-Staging-Environment-Role
 
 ### Role Purpose
-This IAM role is used by GitHub Actions CI/CD pipeline to deploy and manage the ITrack staging infrastructure. It has the minimum required permissions following the principle of least privilege.
+This IAM role is used by GitHub Actions CI/CD pipeline to deploy and manage the DevopsApp staging infrastructure. It has the minimum required permissions following the principle of least privilege.
 
 ### Role Details
-- **Role Name:** `ITrack-Staging-Environment-Role`
+- **Role Name:** `DevopsApp-Staging-Environment-Role`
 - **Trusted Entity:** GitHub Actions (via OIDC) or IAM User
-- **Description:** Deployment role for ITrack staging environment with comprehensive AWS service permissions
+- **Description:** Deployment role for DevopsApp staging environment with comprehensive AWS service permissions
 
 ### Required Permissions
 
@@ -952,7 +952,7 @@ Key environment variables used across the infrastructure:
 - `AWS_REGION`: us-east-1
 - `AWS_ACCOUNT_ID`: 875486186130
 - `ENVIRONMENT`: production (staging)
-- `PROJECT_NAME`: itrack
+- `PROJECT_NAME`: DevopsApp
 - `VPC_CIDR`: 10.0.0.0/16
 
 ## Deployment Process
