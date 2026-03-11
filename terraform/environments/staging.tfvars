@@ -6,10 +6,10 @@ aws_region        = "us-east-1"
 aws_account_id    = "875486186130"
 environment       = "staging"
 project_name      = "DevopsApp"
-frontend_prod_url = "https://DevopsApp-frontend-staging.thejitutech.com"
-api_base_url_prod = "https://DevopsApp-api-staging.thejitutech.com"
-frontend_url      = "https://DevopsApp-frontend-staging.thejitutech.com"
-api_base_url      = "https://DevopsApp-api-staging.thejitutech.com"
+frontend_prod_url = "https://DevopsApp-frontend-staging.DevopsDemo.com"
+api_base_url_prod = "https://DevopsApp-api-staging.DevopsDemo.com"
+frontend_url      = "https://DevopsApp-frontend-staging.DevopsDemo.com"
+api_base_url      = "https://DevopsApp-api-staging.DevopsDemo.com"
 # VPC Configuration
 vpc_cidr        = "10.1.0.0/16" # Different CIDR for staging
 az_count        = 2
@@ -39,7 +39,7 @@ ecs_memory        = 512
 notification_emails = ["dev-alerts@DevopsApp.com"]
 
 # DNS Configuration
-domain_names = ["thejitutech.com", "DevopsApp-frontend-staging.thejitutech.com"]
+domain_names = ["DevopsDemo.com", "DevopsApp-frontend-staging.DevopsDemo.com"]
 
 # CloudFront Cache Settings
 cloudfront_cache_settings = {

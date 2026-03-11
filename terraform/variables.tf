@@ -332,20 +332,20 @@ variable "sender_email" {
 variable "frontend_url" {
   description = "Base URL of the react frontend application"
   type        = string
-  default     = "https://DevopsApp-frontend.thejitutech.com"
+  default     = "https://DevopsApp-frontend.DevopsDemo.com"
 }
 
 
 variable "frontend_prod_url" {
   description = "Production URL of the react frontend application"
   type        = string
-  default     = "https://DevopsApp-frontend.thejitutech.com"
+  default     = "https://DevopsApp-frontend.DevopsDemo.com"
 }
 
 variable "api_base_url" {
   description = "Base URL of the backend application"
   type        = string
-  default     = "https://DevopsApp-api.thejitutech.com"
+  default     = "https://DevopsApp-api.DevopsDemo.com"
 
 }
 
@@ -353,5 +353,5 @@ variable "api_base_url" {
 variable "api_base_url_prod" {
   description = "Production URL of the backend application"
   type        = string
-  default     = "https://DevopsApp-api.thejitutech.com"
+  default     = "https://DevopsApp-api.DevopsDemo.com"
 }

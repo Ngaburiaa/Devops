@@ -3,10 +3,10 @@ aws_region        = "us-east-1"
 aws_account_id    = "471744311346"
 environment       = "production"
 project_name      = "DevopsApp"
-frontend_url      = "https://DevopsApp-frontend.thejitutech.com"
-frontend_prod_url = "https://DevopsApp-frontend.thejitutech.com"
-api_base_url_prod = "https://DevopsApp-api.thejitutech.com"
-api_base_url      = "https://DevopsApp-api.thejitutech.com"
+frontend_url      = "https://DevopsApp-frontend.DevopsDemo.com"
+frontend_prod_url = "https://DevopsApp-frontend.DevopsDemo.com"
+api_base_url_prod = "https://DevopsApp-api.DevopsDemo.com"
+api_base_url      = "https://DevopsApp-api.DevopsDemo.com"
 
 # VPC Configuration
 vpc_cidr        = "10.2.0.0/16"
@@ -20,7 +20,7 @@ health_check_path = "/health"
 
 # Security Configuration (Restricted for production)
 allowed_ips     = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"] # Private networks only
-allowed_domains = ["thejitutech.com"]
+allowed_domains = ["DevopsDemo.com"]
 
 # Database Configuration (Non-Sensitive)
 db_instance_class = "db.t3.medium"
@@ -35,10 +35,10 @@ ecs_memory        = 1024
 notification_emails = ["DevopsApp@griffinglobaltech.com"]
 
 # DNS Configuration
-# NOTE: thejitutech.com is currently used by staging CloudFront
+# NOTE: DevopsDemo.com is currently used by staging CloudFront
 # Set to empty for now - production will use CloudFront default URL (*.cloudfront.net)
 # To use custom domain later: remove from staging, add SSL cert, then set here
-domain_names = ["DevopsApp-frontend.thejitutech.com"]
+domain_names = ["DevopsApp-frontend.DevopsDemo.com"]
 
 
 # CloudFront Cache Settings
