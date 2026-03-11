@@ -76,7 +76,6 @@ YourSecurePassword123!
 
 ## Where to Add These
 
-1. Go to: `https://github.com/GRIFFINGlobalTech/rs-feb-25/settings/secrets/actions`
 2. Click **New repository secret** for each one
 3. Copy the name and value exactly as shown above
 4. Click **Add secret**
