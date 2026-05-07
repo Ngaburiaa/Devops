@@ -1,6 +1,6 @@
 # AWS Configuration
 aws_region        = "us-east-1"
-aws_account_id    = "471744311346"
+aws_account_id    = "46473428462866"
 environment       = "production"
 project_name      = "DevopsApp"
 frontend_url      = "https://DevopsApp-frontend.DevopsDemo.com"
@@ -32,7 +32,7 @@ ecs_cpu           = 512
 ecs_memory        = 1024
 
 # Notification
-notification_emails = ["DevopsApp@griffinglobaltech.com"]
+notification_emails = ["DevopsApp@gmail.com"]
 
 # DNS Configuration
 # NOTE: DevopsDemo.com is currently used by staging CloudFront
@@ -104,4 +104,4 @@ waf_rate_limit        = 10000
 waf_allowed_countries = ["US", "CA", "GB", "AU"]
 
 # ACM Certificate for HTTPS
-acm_certificate_arn = "arn:aws:acm:us-east-1:471744311346:certificate/0db2d0be-ebe8-454e-81eb-548568726703"
+acm_certificate_arn = "arn:aws:acm:us-east-1:48234728572:certificate/0db2d0be-ebe8-454e-81eb-548568726703"
